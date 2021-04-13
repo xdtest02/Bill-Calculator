@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title>電費計算</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+	<p>
+	<div class="input-title">總度數</div>
+	<input id="kwh-total" type="text" placeholder="0"></input>
+	</p>
+
+	<p>
+	<div class="input-title">八樓度數</div>
+	<input id="kwh-8f" type="text" placeholder="0"></input>
+	</p>
+
+	<p>
+	<div class="input-title">公電費</div>
+	<input id="public-expenses" type="text" placeholder="0"></input>
+	</p>
+
+	<p>
+	<div class="input-title">獎勵扣除額</div>
+	<input id="bonus" type="text" placeholder="0"></input>
+	</p>
+
+	<p>
+		<label class="input-radio-cover"><input class="input-radio" name="sign-up-type" type="radio" checked></input>
+			常規電價</label>
+		<label class="input-radio-cover"><input class="input-radio" name="sign-up-type" type="radio"></input> 夏季電價 ( 6 ~ 9 月
+			)</label>
+	</p>
+
+	<p>
+	<div><button type="button" id="btn">計算</button></div>
+	</p>
+
+	<p>
+	<div id="result"></div>
+	</p>
+
+	<script>
+
+		function getRadioInfo() {
+			const radioList = document.querySelectorAll('.input-radio');
+			for (const radio of radioList) {
+				if (radio.checked) return radio.parentNode.innerText.trim();
+			}
+		}
+
+		function getResult(kWh) {
+			const lv = [240, 420, 340, 400, 600, Number.MAX_VALUE]
+			const common = [1.63, 2.1, 2.89, 3.94, 4.6, 5.03];
+			const summer = [1.63, 2.38, 3.52, 4.8, 5.66, 6.41];
+
+			let result = 0;
+			let rates = getRadioInfo() === '常規電價' ? common : summer;
+
+			for (let i = 0; i < lv.length; i++) {
+				if (kWh > lv[i]) {
+					result += lv[i] * rates[i];
+					kWh -= lv[i];
+				} else {
+					result += kWh * rates[i];
+					return result;
+				}
+			}
+		}
+
+		document.querySelector('#btn').addEventListener('click', () => {
+			let kwhT = Number(document.querySelector('#kwh-total').value || 0);
+			let kwh8 = Number(document.querySelector('#kwh-8f').value || 0);
+			let bonus = (Number(document.querySelector('#bonus').value || 0) -
+				Number(document.querySelector('#public-expenses').value || 0));
+
+			let r = Math.round(getResult(kwhT) - bonus) || 0;
+			let r8 = Math.round((getResult(kwhT) * kwh8 / kwhT) - (bonus / 2)) || 0;
+			let r7 = Math.round(r - r8) || 0;
+			let resultStr = `==================\n總額 : ${r} \n 7 樓費用 : ${r7} \n 8 樓費用 : ${r8}\n==================`;
+
+			document.querySelector('#result').innerText = resultStr;
+		});
+	</script>
+</body>
+
+</html>
